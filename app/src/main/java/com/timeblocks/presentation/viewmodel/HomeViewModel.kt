@@ -87,8 +87,13 @@ class HomeViewModel @Inject constructor(
      */
     private fun loadTodayBlocks() {
         viewModelScope.launch {
+            Timber.d("loadTodayBlocks: Начало загрузки блоков для даты ${LocalDate.now()}")
             getDailyBlocksUseCase(LocalDate.now())
                 .collect { blocks ->
+                    Timber.d("loadTodayBlocks: Получено ${blocks.size} блоков")
+                    blocks.forEach { block ->
+                        Timber.d("  Блок: ${block.title} (${block.startTime} - ${block.endTime}), completed: ${block.isCompleted}")
+                    }
                     _state.value = _state.value.copy(
                         todayBlocks = blocks,
                         isLoading = false

@@ -2,10 +2,14 @@ package com.timeblocks.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.timeblocks.domain.model.User
 import com.timeblocks.domain.repository.UserRepository
 import com.timeblocks.utils.isValidEmail
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -41,7 +45,7 @@ class AuthViewModel @Inject constructor(
     /**
      * Вход по Email/Password
      */
-    fun signInWithEmail(email: String, password: String) {
+    fun signIn(email: String, password: String) {
         viewModelScope.launch {
             if (!validateEmail(email)) return@launch
             if (!validatePassword(password)) return@launch
@@ -50,8 +54,16 @@ class AuthViewModel @Inject constructor(
 
             val result = userRepository.signInWithEmail(email, password)
 
-            result.onSuccess {
-                _events.emit(AuthEvent.LoginSuccess)
+            result.onSuccess { userId ->
+                // Получаем данные пользователя после успешного входа
+                val user = userRepository.getUserSettingsSync(userId)
+                if (user != null) {
+                    _events.emit(AuthEvent.LoginSuccess)
+                } else {
+                    _state.value = _state.value.copy(
+                        error = "Failed to get user data"
+                    )
+                }
             }.onFailure {
                 _state.value = _state.value.copy(
                     error = it.message ?: "Authentication failed"
@@ -65,8 +77,12 @@ class AuthViewModel @Inject constructor(
     /**
      * Регистрация по Email/Password
      */
-    fun signUpWithEmail(email: String, password: String, confirmPassword: String) {
+    fun signUp(name: String, email: String, password: String, confirmPassword: String) {
         viewModelScope.launch {
+            if (name.isBlank()) {
+                _state.value = _state.value.copy(error = "Имя не может быть пустым")
+                return@launch
+            }
             if (!validateEmail(email)) return@launch
             if (!validatePassword(password)) return@launch
             if (!validateConfirmPassword(password, confirmPassword)) return@launch
@@ -75,8 +91,26 @@ class AuthViewModel @Inject constructor(
 
             val result = userRepository.signUpWithEmail(email, password)
 
-            result.onSuccess {
-                _events.emit(AuthEvent.RegistrationSuccess)
+            result.onSuccess { userId ->
+                // Создаем настройки пользователя с именем
+                val user = User(
+                    userId = userId,
+                    theme = "system",
+                    notificationsEnabled = true,
+                    language = "ru",
+                    isPremium = false,
+                    lastSyncTime = null,
+                    maxCategories = 3
+                )
+                
+                val saveResult = userRepository.saveUserSettings(user)
+                saveResult.onSuccess {
+                    _events.emit(AuthEvent.RegistrationSuccess)
+                }.onFailure {
+                    _state.value = _state.value.copy(
+                        error = it.message ?: "Failed to save user settings"
+                    )
+                }
             }.onFailure {
                 _state.value = _state.value.copy(
                     error = it.message ?: "Registration failed"

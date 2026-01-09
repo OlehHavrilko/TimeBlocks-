@@ -40,7 +40,6 @@ fun LoginScreen(
     // Показать ошибку если есть
     if (state.error != null) {
         LaunchedEffect(state.error) {
-            // Auto-dismiss after 3 seconds
             kotlinx.coroutines.delay(3000)
             onDismissError()
         }

@@ -77,7 +77,7 @@ fun TimeBlocksNavGraph(
 
             LoginScreen(
                 state = state,
-                onLogin = viewModel::signInWithEmail,
+                onLogin = viewModel::signIn,
                 onGoogleLogin = viewModel::signInWithGoogle,
                 onNavigateToSignUp = {
                     navController.navigate(Screen.SignUp.route)
@@ -107,7 +107,9 @@ fun TimeBlocksNavGraph(
 
             SignUpScreen(
                 state = state,
-                onSignUp = viewModel::signUpWithEmail,
+                onSignUp = { name, email, password, confirmPassword ->
+                    viewModel.signUp(name, email, password, confirmPassword)
+                },
                 onNavigateToLogin = {
                     navController.popBackStack()
                 },

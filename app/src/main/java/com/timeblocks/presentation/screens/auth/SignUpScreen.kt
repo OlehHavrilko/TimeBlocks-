@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -28,10 +29,11 @@ import com.timeblocks.presentation.viewmodel.AuthState
 @Composable
 fun SignUpScreen(
     state: AuthState,
-    onSignUp: (String, String, String) -> Unit,
+    onSignUp: (String, String, String, String) -> Unit,
     onNavigateToLogin: () -> Unit,
     onDismissError: () -> Unit
 ) {
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -94,6 +96,19 @@ fun SignUpScreen(
                         .fillMaxWidth()
                         .padding(24.dp)
                 ) {
+                    // Name
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Имя") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Person, contentDescription = null)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     // Email
                     OutlinedTextField(
                         value = email,
@@ -156,11 +171,18 @@ fun SignUpScreen(
 
                     // Кнопка регистрации
                     Button(
-                        onClick = { onSignUp(email, password, confirmPassword) },
+                        onClick = { 
+                            if (password == confirmPassword) {
+                                onSignUp(name, email, password, confirmPassword)
+                            } else {
+                                // Показать ошибку несовпадения паролей
+                                // Это уже обрабатывается в ViewModel через validateConfirmPassword
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
-                        enabled = !state.isLoading && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank(),
+                        enabled = !state.isLoading && name.isNotBlank() && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank(),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         if (state.isLoading) {

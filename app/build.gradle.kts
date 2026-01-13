@@ -20,6 +20,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Fix for transform issues
+        testOptions {
+            unitTests {
+                isIncludeAndroidResources = true
+                isReturnDefaultValues = true
+            }
+        }
     }
 
     buildTypes {
@@ -54,6 +62,17 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+        // Fix for duplicate files in transform
+        jniLibs {
+            pickFirsts += "**/*.so"
+        }
+    }
+    
+    // Additional settings to fix transform issues
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
         }
     }
 }

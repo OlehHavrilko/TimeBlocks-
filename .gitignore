@@ -92,3 +92,11 @@ firebase-debug.log
 
 # Billing
 billing.json
+
+# Node.js
+node_modules/
+package-lock.json
+package.json
+
+# KiloCode
+.kilocode/
